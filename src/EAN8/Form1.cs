@@ -217,14 +217,57 @@ namespace EAN8
         }
 
         /// <summary>
+        /// 根据前12位算出第13位
+        /// </summary>
+        private void calculate13()
+        {
+            // http://zhidao.baidu.com/question/12841670.html
+
+            int[] reverseNumbers = new int[14];
+            for (int i = 0; i < 12; i++)
+            {
+                reverseNumbers[13 - i] = allNumbers[i];
+            }
+
+            int evenSum = 0;
+            for (int i = 2; i <= 13; i += 2)
+            {
+                evenSum += reverseNumbers[i];
+            }
+
+            int tripleEvenSum = evenSum * 3;
+
+            int oddSum = 0;
+            for (int i = 3; i <= 13; i += 2)
+            {
+                oddSum += reverseNumbers[i];
+            }
+
+            int totalSum = tripleEvenSum + oddSum;
+
+            int checksum;
+            if (totalSum % 10 == 0)
+            {
+                checksum = 0;
+            }
+            else
+            {
+                checksum = (totalSum / 10 + 1) * 10 - totalSum;
+            }
+
+            // finally
+            allNumbers[12] = checksum;
+        }
+
+        /// <summary>
         /// 生成条码的button按了之后就执行这里
         /// </summary>
         private void button1_Click(object sender, EventArgs e)
         {
-            // 长度得是13
-            if (textBox1.Text.Length != 13)
+            // 长度得是12
+            if (textBox1.Text.Length != 12)
             {
-                MessageBox.Show("请输入13位EAN");
+                MessageBox.Show("请输入前12位");
                 return;
             }
 
@@ -235,12 +278,13 @@ namespace EAN8
                 return;
             }
 
-            // 这里先把输入的13个数字分开来存好
+            // 这里先把输入的12个数字分开来存好
             char[] arr = textBox1.Text.ToCharArray();
             for (int j = 0; j < arr.Length; j++)
             {
                 allNumbers[j] = int.Parse(arr[j].ToString());
             }
+            calculate13();
 
             // 这个应该就是什么编码表了吧，一个数对应一个string，里头有数字对应的01序列，$用来做分隔符
             // 其实不用这么麻烦做字符串解析的，不过原作者这么写了...
